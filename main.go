@@ -4,6 +4,9 @@ import (
     "fmt"
     "log"
     "net/http"
+    "time"
+
+    "github.com/gorilla/mux" // more sophisticated routing
 )
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
@@ -11,16 +14,29 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    // Define routes
-    http.HandleFunc("/", helloHandler)
 
-    // Specify the port to listen on
+    // Use gorilla mux for more advanced routing
+    r := mux.NewRouter()
+    
+    // middleware
+    r.Use(loggingMiddleware)
+    
+    // Health check endpoint
+    r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+      w.WriteHeader(http.StatusOK)
+      w.Write([]byte("server is okely dokely!"))
+    }).Methods("GET") // restricted to get requests only
+
+    // start the server
     port := ":8080"
     fmt.Printf("Server starting on port %s\n", port)
-    
-    // Start the server
-    err := http.ListenAndServe(port, nil)
-    if err != nil {
-        log.Fatal("Error starting server: ", err)
-    }
+    log.Fatal(http.ListenAndServe(port, r))
+}
+
+// Logging middleware to log each request
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("%s %s %s", r.Method, r.URL.Path, time.Now().Format(time.RFC3339))
+        next.ServeHTTP(w, r)
+    })
 }
