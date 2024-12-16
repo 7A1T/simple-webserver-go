@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "strconv"
     "sync"
     "time"
 
@@ -66,6 +67,33 @@ func main() {
       w.Write([]byte("server is okely dokely!"))
     }).Methods("GET") // restricted to get requests only
 
+    // User creation endpoint
+    r.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+        var user User
+        err := json.NewDecoder(r.Body).Decode(&user)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+
+        id := userStore.AddUser(user)
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(map[string]int{"id": id})
+    }).Methods("POST")
+
+    // User retrieval endpoint
+    r.HandleFunc("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        id, _ := strconv.Atoi(vars["id"])
+        
+        user, exists := userStore.GetUser(id)
+        if !exists {
+            http.Error(w, "User not found", http.StatusNotFound)
+            return
+        }
+
+        json.NewEncoder(w).Encode(user)
+    }).Methods("GET")
     // start the server
     port := ":8080"
     fmt.Printf("Server starting on port %s\n", port)
