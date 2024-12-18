@@ -1,0 +1,73 @@
+basePath: /
+definitions:
+  main.User:
+    description: User model with basic information
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A simple user management API with Swagger documentation
+  title: User Management API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new user to the system and returns the assigned user ID
+      parameters:
+      - description: User to create
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Invalid user data
+          schema:
+            type: string
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Retrieves a specific user from the system
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User found
+          schema:
+            $ref: '#/definitions/main.User'
+        "404":
+          description: User not found
+          schema:
+            type: string
+      summary: Get a user by ID
+      tags:
+      - users
+swagger: "2.0"
